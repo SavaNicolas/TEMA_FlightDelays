@@ -1,5 +1,6 @@
 from database.DB_connect import DBConnect
 from model.airport import Airport
+from model.arco import Arco
 
 
 class DAO():
@@ -49,6 +50,31 @@ ORDER BY N ASC;
 
         for row in cursor:
             result.append(Airport(**row))
+
+        cursor.close()
+        conn.close()
+        return result
+
+    @staticmethod
+    def getAllEdges(idMapAirports):
+        conn = DBConnect.get_connection()
+
+        result = []
+
+        cursor = conn.cursor(dictionary=True)
+        # conto prima il numero di voli che fa una compagnia
+        # e da quello poi conto quante compagnie partono da quell'areoporto
+        # a noi servono solo quelli con + di 5 compagnie(having)
+        query = """select f.ORIGIN_AIRPORT_ID as aP, f.DESTINATION_AIRPORT_ID as aD, count(*) as Peso
+from flights f
+group by f.ORIGIN_AIRPORT_ID, f.DESTINATION_AIRPORT_ID
+order by f.ORIGIN_AIRPORT_ID, f.DESTINATION_AIRPORT_ID
+        """
+
+        cursor.execute(query)
+
+        for row in cursor:  # ci serve s
+            result.append(Arco(idMapAirports[row["aP"]],idMapAirports[row["aD"]], row["Peso"] ))
 
         cursor.close()
         conn.close()

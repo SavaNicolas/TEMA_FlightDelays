@@ -76,7 +76,20 @@ class Controller:
         self._view.update_page()
 
     def handleCerca(self,e):
-        pass
+        v0=self._choiseDDAereoportoP
+        v1=self._choiseDDAereoportoD
+        t=self._view._txtInTratteMax.value
+
+        tint=int(t)
+        path,scoretot= self._model.getCamminoOttimo(v0,v1,tint)
+        self._view.txt_result.controls.clear()
+
+        self._view.txt_result.controls.append(ft.Text(f"Cammino ottimo tra {v0} e {v1}"))
+        for p in path:
+            self._view.txt_result.controls.append(ft.Text(p))
+        self._view.txt_result.controls.append(ft.Text(f"Score: {scoretot}"))
+        self._view.update_page()
+
 
     def fillDD(self,allNodes):
         for n in allNodes:

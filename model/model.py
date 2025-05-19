@@ -1,3 +1,5 @@
+import copy
+
 import networkx as nx
 
 from database.DAO import DAO
@@ -13,6 +15,9 @@ class Model:
         self._idMapAirports = {}
         for a in self._airports:
             self._idMapAirports[a.ID] = a
+
+        self._bestPath = []
+        self._bestObjFun = 0
 
     def buildGraph(self,nMin):
         nodes= DAO.getAllNodes(nMin, self._idMapAirports)
@@ -57,3 +62,48 @@ class Model:
     def getPath(self,v0,v1):
         path=nx.dijkstra_path(self._graph,v0,v1, weight=None)
         return path
+
+    #parte 2
+
+    def getCamminoOttimo(self,aereoportoP,aereoportoD,Ntratte):
+        self._bestPath=[]
+        self._bestObjFun=0 #inizializzate anche nell'init
+
+        parziale= [aereoportoP]
+        self._ricorsione(parziale,aereoportoD,Ntratte)
+
+        return self._bestPath, self._bestObjFun
+
+    def _ricorsione(self,parziale,aereoportoD,Ntratte):
+        #condizione terminale, quindi verificare se parziale è una soluzione e
+            #verificare se parziale è meglio del best
+            #esco
+        if parziale[-1]==aereoportoD: #sono arrivato a destinazione
+            if self._getObjFun(parziale)> self._bestObjFun: #massimizzare i pesi
+                self._bestObjFun=self._getObjFun(parziale)
+                self._bestPath= copy.deepcopy(parziale)
+
+        if len(parziale)==Ntratte+1:#se supera il numero di tratte che avevo inserito
+            return
+
+        #ricorsione, posso ancora aggiungere nodi
+        #partendo dall'ultimo nodo, prendo i vicini e aggiungo un nodo alla volta
+        for n in self._graph.neighbors(parziale[-1]):
+            #verifico che non abbiamo già n in parziale
+            if n not in parziale:
+                parziale.append(n)
+                self._ricorsione(parziale,aereoportoD,Ntratte)
+                parziale.pop() #backtracking
+
+
+
+    def _getObjFun(self,parziale):
+        #sommo il valore dei pesi di tutti gli archi(nodi-1)
+        #parziale è una lista di nodi
+        objval=0
+        for i in range(0, len(list(parziale))-1):
+            objval += self._graph[parziale[i]][parziale[i+1]]["weight"] #archi tra i nodi
+
+        return objval
+
+
